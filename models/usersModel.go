@@ -10,8 +10,11 @@ import (
 
 // UserProfile represents the structure of a user profile document
 type UserProfile struct {
-	Name  string        `json:"name"`
-	Genre []interface{} `json:"genre"`
+	ID     string        `json:"_id"`
+	UserID string        `json:"userID"`
+	Name   string        `json:"name"`
+	Genre  []interface{} `json:"genre"`
+	Feed   []Post        `json:"feed"`
 }
 
 // AddProfile appends a new user profile to the users collections
