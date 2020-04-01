@@ -85,6 +85,34 @@ func createProfile(db *mongo.Database) func(w http.ResponseWriter, r *http.Reque
 	return fn
 }
 
+func getUserProfile(db *mongo.Database) func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		users := db.Collection("users")
+		params := mux.Vars(r)
+		userID := params["userID"]
+		fmt.Printf("user id %v\n", userID)
+
+		w.Header().Set("Content-Type", "application/json")
+		if userID == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message": "A user id must be provided like profile/12312"}`))
+		}
+
+		userProfile, err := models.GetUserProfile(users, userID)
+		fmt.Printf("user id %v\n", userProfile.UserID)
+		w.WriteHeader(http.StatusOK)
+		userProfileJSON, err := json.Marshal(&userProfile)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Fatal error while retrieving user from db"}`))
+		}
+
+		w.Write(userProfileJSON)
+	}
+	return fn
+}
+
 /*
  ################## user feed endpoints  ###############
 */
@@ -147,6 +175,7 @@ func main() {
 	api.HandleFunc("/login", login).Methods(http.MethodGet)
 
 	api.HandleFunc("/profile", createProfile(db)).Methods(http.MethodPost)
+	api.HandleFunc("/profile/{userID}", getUserProfile(db)).Methods(http.MethodGet)
 	api.HandleFunc("/profile/feed", getUserFeed(db)).Methods(http.MethodGet)
 
 	api.HandleFunc("/post", postFeed(db)).Methods(http.MethodPost)

@@ -5,16 +5,22 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // UserProfile represents the structure of a user profile document
 type UserProfile struct {
-	ID     string        `json:"_id"`
-	UserID string        `json:"userID"`
-	Name   string        `json:"name"`
-	Genre  []interface{} `json:"genre"`
-	Feed   []Post        `json:"feed"`
+	UserID     string        `json:"userID"`
+	Token      string        `json:"token"`
+	Name       string        `json:"name"`
+	Entitle    string        `json:"entitle"`
+	About      string        `json:"about"`
+	SampleLink string        `json:"sampleLink"`
+	Genre      []interface{} `json:"genre"`
+	Followers  []interface{} `json:"followers"`
+	Comments   []interface{} `json:"comments"`
+	Feed       []Post        `json:"feed"`
 }
 
 // AddProfile appends a new user profile to the users collections
@@ -28,4 +34,17 @@ func AddProfile(profileCollection *mongo.Collection, data []byte) error {
 	defer cancel()
 	profileCollection.InsertOne(ctx, user)
 	return nil
+}
+
+// GetUserProfile get a user profile base on a userID
+func GetUserProfile(profileCollection *mongo.Collection, userID string) (*UserProfile, error) {
+	var user UserProfile
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+	filter := bson.M{"userID": userID}
+	err := profileCollection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
