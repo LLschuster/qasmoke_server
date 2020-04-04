@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -182,10 +183,12 @@ func main() {
 
 	api.HandleFunc("/upload/{userID}", uploadFile).Methods(http.MethodPost)
 
-	port := 5000
-	fmt.Println("port ", port)
+	port := flag.Int("port", 5000, "server port")
+	flag.Parse()
 
-	err = http.ListenAndServe(fmt.Sprintf(":%d", port), router)
+	fmt.Println("port ", *port)
+
+	err = http.ListenAndServe(fmt.Sprintf(":%d", *port), router)
 	if err != nil {
 		log.Fatal(err)
 	}
