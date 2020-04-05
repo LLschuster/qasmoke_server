@@ -91,6 +91,7 @@ func getUserProfile(db *mongo.Database) func(w http.ResponseWriter, r *http.Requ
 		users := db.Collection("users")
 		params := mux.Vars(r)
 		userID := params["userID"]
+		fmt.Println("Getting user profile")
 		fmt.Printf("user id %v\n", userID)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -100,7 +101,12 @@ func getUserProfile(db *mongo.Database) func(w http.ResponseWriter, r *http.Requ
 		}
 
 		userProfile, err := models.GetUserProfile(users, userID)
-		fmt.Printf("user id %v\n", userProfile.UserID)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"message": "Fatal error while retrieving user from db"}`))
+		}
+		//fmt.Printf("user id %v\n", userProfile.UserID)
 		w.WriteHeader(http.StatusOK)
 		userProfileJSON, err := json.Marshal(&userProfile)
 
@@ -145,14 +151,14 @@ func getUserFeed(db *mongo.Database) func(w http.ResponseWriter, r *http.Request
 		params, err := ioutil.ReadAll(r.Body)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"message": "invalid body of request"}`))
 		}
 
 		feed, err := models.GetUserFeeds(users, params)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"message": "Fatal error while getting feed for user"}`))
 		}
@@ -177,7 +183,7 @@ func main() {
 
 	api.HandleFunc("/profile", createProfile(db)).Methods(http.MethodPost)
 	api.HandleFunc("/profile/{userID}", getUserProfile(db)).Methods(http.MethodGet)
-	api.HandleFunc("/profile/feed", getUserFeed(db)).Methods(http.MethodGet)
+	api.HandleFunc("/feed", getUserFeed(db)).Methods(http.MethodGet)
 
 	api.HandleFunc("/post", postFeed(db)).Methods(http.MethodPost)
 
