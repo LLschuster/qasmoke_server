@@ -27,17 +27,15 @@ type Post struct {
 }
 
 // GetUserFeeds gets the user feed of a user base on its userID
-func GetUserFeeds(profileCollection *mongo.Collection, data []byte) ([]Post, error) {
+func GetUserFeeds(profileCollection *mongo.Collection, userID string) ([]Post, error) {
 	var (
-		user      UserProfile
 		foundUSer UserProfile
 	)
-	err := json.Unmarshal(data, &user)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
-	filter := bson.M{"userID": user.UserID}
-	err = profileCollection.FindOne(ctx, filter).Decode(&foundUSer)
+	filter := bson.M{"userid": userID}
+	err := profileCollection.FindOne(ctx, filter).Decode(&foundUSer)
 	if err != nil {
 		return nil, err
 	}

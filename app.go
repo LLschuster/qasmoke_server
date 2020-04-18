@@ -148,15 +148,11 @@ func postFeed(db *mongo.Database) func(w http.ResponseWriter, r *http.Request) {
 func getUserFeed(db *mongo.Database) func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		users := db.Collection("users")
-		params, err := ioutil.ReadAll(r.Body)
+		params := mux.Vars(r)
+		userID := params["userID"]
 		w.Header().Set("Content-Type", "application/json")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"message": "invalid body of request"}`))
-		}
 
-		feed, err := models.GetUserFeeds(users, params)
+		feed, err := models.GetUserFeeds(users, userID)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -183,7 +179,7 @@ func main() {
 
 	api.HandleFunc("/profile", createProfile(db)).Methods(http.MethodPost)
 	api.HandleFunc("/profile/{userID}", getUserProfile(db)).Methods(http.MethodGet)
-	api.HandleFunc("/feed", getUserFeed(db)).Methods(http.MethodGet)
+	api.HandleFunc("/feed/{userID}", getUserFeed(db)).Methods(http.MethodGet)
 
 	api.HandleFunc("/post", postFeed(db)).Methods(http.MethodPost)
 
